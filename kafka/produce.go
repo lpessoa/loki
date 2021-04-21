@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -16,6 +15,10 @@ var flushTimeout = 50
 type Producer struct {
 	kProducer    *kafka.Producer
 	schemaClient *srclient.SchemaRegistryClient
+}
+
+type J struct {
+	Name string `json:"name"`
 }
 
 func CreateProducer() *Producer {
@@ -50,13 +53,12 @@ func (producer *Producer) getSchemaId(subject string) (*srclient.Schema, error) 
 	return producer.schemaClient.GetLatestSchema(subject, false)
 }
 
-func (producer *Producer) makePayload(schema *srclient.Schema, data *interface{}) ([]byte, error) {
+func (producer *Producer) makePayload(schema *srclient.Schema, data *[]byte) ([]byte, error) {
 	/* setup schema ID */
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 	/* set payload */
-	value, _ := json.Marshal(data)
-	native, _, _ := schema.Codec().NativeFromTextual(value)
+	native, _, _ := schema.Codec().NativeFromTextual(*data)
 	valueBytes, _ := schema.Codec().BinaryFromNative(nil, native)
 
 	var record []byte
@@ -77,12 +79,12 @@ func (producer *Producer) getHeaders() []kafka.Header {
 	}
 }
 
-func (producer *Producer) PublishMessageToTopic(topic string, payload interface{}) (string, error) {
+func (producer *Producer) PublishMessageToTopic(topic string, payload *[]byte) (string, error) {
 	schema, err := producer.getSchemaId(topic)
 	if err != nil {
 		panic(err)
 	}
-	pl, err := producer.makePayload(schema, &payload)
+	pl, err := producer.makePayload(schema, payload)
 	if err != nil {
 		panic("unable to create payload with provided schema")
 	}
