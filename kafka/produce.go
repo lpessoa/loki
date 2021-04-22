@@ -2,7 +2,10 @@ package kafka
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+
+	"br.com.telecine/loki/core"
 
 	"github.com/google/uuid"
 
@@ -58,8 +61,17 @@ func (producer *Producer) makePayload(schema *srclient.Schema, data *[]byte) ([]
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 	/* set payload */
-	native, _, _ := schema.Codec().NativeFromTextual(*data)
-	valueBytes, _ := schema.Codec().BinaryFromNative(nil, native)
+	native, _, err := schema.Codec().NativeFromTextual(*data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	valueBytes, err := schema.Codec().BinaryFromNative(nil, native)
+
+	if err != nil {
+		return nil, err
+	}
 
 	var record []byte
 	record = append(record, byte(0))
@@ -69,43 +81,49 @@ func (producer *Producer) makePayload(schema *srclient.Schema, data *[]byte) ([]
 	return record, nil
 }
 
-func (producer *Producer) getHeaders() []kafka.Header {
+func (producer *Producer) getHeaders(retryCount int) []kafka.Header {
 	messageId := uuid.NewString()
 	return []kafka.Header{
 		{
 			Key:   "x-message-id",
 			Value: []byte(messageId),
 		},
+		{
+			Key:   "x-klzr-retry-count",
+			Value: []byte(fmt.Sprintf("%v", retryCount)),
+		},
 	}
 }
 
-func (producer *Producer) PublishMessageToTopic(topic string, payload *[]byte) (string, error) {
-	schema, err := producer.getSchemaId(topic)
+func (producer *Producer) PublishMessageToTopic(eventItem *core.EventMapItem, payload *[]byte) (*string, error) {
+	schema, err := producer.getSchemaId(eventItem.Topic)
 	if err != nil {
 		panic(err)
 	}
 	pl, err := producer.makePayload(schema, payload)
 	if err != nil {
-		panic("unable to create payload with provided schema")
+		fmt.Println(err.Error())
+		return nil, errors.New("unable to create payload with provided schema")
 	}
 
 	messageId := uuid.NewString()
-	headers := producer.getHeaders()
+	headers := producer.getHeaders(eventItem.RetryCount)
 
 	err = producer.kProducer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		TopicPartition: kafka.TopicPartition{Topic: &eventItem.Topic, Partition: kafka.PartitionAny},
 		Headers:        headers,
 		Value:          pl,
 	}, nil)
+
 	go func() {
 		producer.kProducer.Flush(flushTimeout)
 	}()
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return messageId, nil
+	return &messageId, nil
 }
 
 func (producer *Producer) Close() {
