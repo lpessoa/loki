@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -58,8 +59,17 @@ func (producer *Producer) makePayload(schema *srclient.Schema, data *[]byte) ([]
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 	/* set payload */
-	native, _, _ := schema.Codec().NativeFromTextual(*data)
-	valueBytes, _ := schema.Codec().BinaryFromNative(nil, native)
+	native, _, err := schema.Codec().NativeFromTextual(*data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	valueBytes, err := schema.Codec().BinaryFromNative(nil, native)
+
+	if err != nil {
+		return nil, err
+	}
 
 	var record []byte
 	record = append(record, byte(0))
@@ -79,14 +89,15 @@ func (producer *Producer) getHeaders() []kafka.Header {
 	}
 }
 
-func (producer *Producer) PublishMessageToTopic(topic string, payload *[]byte) (string, error) {
+func (producer *Producer) PublishMessageToTopic(topic string, payload *[]byte) (*string, error) {
 	schema, err := producer.getSchemaId(topic)
 	if err != nil {
 		panic(err)
 	}
 	pl, err := producer.makePayload(schema, payload)
 	if err != nil {
-		panic("unable to create payload with provided schema")
+		fmt.Println(err.Error())
+		return nil, errors.New("unable to create payload with provided schema.")
 	}
 
 	messageId := uuid.NewString()
@@ -97,15 +108,16 @@ func (producer *Producer) PublishMessageToTopic(topic string, payload *[]byte) (
 		Headers:        headers,
 		Value:          pl,
 	}, nil)
+
 	go func() {
 		producer.kProducer.Flush(flushTimeout)
 	}()
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return messageId, nil
+	return &messageId, nil
 }
 
 func (producer *Producer) Close() {
