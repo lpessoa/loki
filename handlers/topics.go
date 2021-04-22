@@ -36,7 +36,7 @@ func TopicHandler(w http.ResponseWriter, r *http.Request) {
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 	data, _ := ioutil.ReadAll(r.Body)
-	msgId, err := producer.PublishMessageToTopic(eventInfo.Topic, &data)
+	msgId, err := producer.PublishMessageToTopic(eventInfo, &data)
 
 	w.Header().Add("content-type", "application/json")
 
