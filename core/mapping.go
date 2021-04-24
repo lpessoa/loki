@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"io/ioutil"
 )
 
@@ -16,8 +15,7 @@ type EventMapItem struct {
 /** event mapping collection */
 type EventMappings map[string]EventMapItem
 
-func readEventFile() []byte {
-	mappingFile := flag.String("mappings", "./eventMappings.json", "Event mapping jsonfile")
+func readEventFile(mappingFile *string) []byte {
 	data, err := ioutil.ReadFile(*mappingFile)
 	if err != nil {
 		panic(err)
@@ -25,15 +23,20 @@ func readEventFile() []byte {
 	return data
 }
 
-func GetEventInfo(eventKey string) (*EventMapItem, error) {
-	data := readEventFile()
+func GetEventInfo(eventKey string, mappingFile *string) (*EventMapItem, error) {
+	data := readEventFile(mappingFile)
 	var items EventMappings
 
 	err := json.Unmarshal(data, &items)
 	if err != nil {
 		return nil, errors.New("unable to parse event mapping information")
 	}
-	item := items[eventKey]
+
+	item, present := items[eventKey]
+
+	if !present {
+		return nil, errors.New("missing event information for provided topic")
+	}
 
 	return &item, nil
 }

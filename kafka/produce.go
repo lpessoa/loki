@@ -15,16 +15,16 @@ import (
 
 var flushTimeout = 50
 
+type IProducer interface {
+	PublishMessageToTopic(eventItem *core.EventMapItem, payload *[]byte) (*string, error)
+}
+
 type Producer struct {
 	kProducer    *kafka.Producer
 	schemaClient *srclient.SchemaRegistryClient
 }
 
-type J struct {
-	Name string `json:"name"`
-}
-
-func CreateProducer() *Producer {
+func NewProducer() IProducer {
 	schemaRegistryClient := srclient.CreateSchemaRegistryClient("http://schema-registry:8081")
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "bitnami-docker-kafka_kafka_1:9092"})
 
