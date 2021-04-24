@@ -8,5 +8,7 @@ require (
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/riferrei/srclient v0.2.1 // indirect
+	github.com/stretchr/testify v1.7.0 // indirect
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.6.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

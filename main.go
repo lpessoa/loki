@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,8 +15,12 @@ import (
 )
 
 func main() {
+	mappingFile := flag.String("mappings", "./eventMappings.json", "Event mapping jsonfile")
+	yaml := flag.Bool("yml", false, "Mapping file is a YAML")
+	flag.Parse()
+
 	m := &middlewares.KafkaProducerMiddleware{}
-	m.Setup()
+	m.Setup(mappingFile, *yaml)
 
 	r := mux.NewRouter()
 	r.Use(m.Middleware)

@@ -1,0 +1,5 @@
+-
+  test-1:
+    topic: test-1
+    retries: 3
+    partitions: 2
