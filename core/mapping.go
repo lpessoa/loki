@@ -8,8 +8,8 @@ import (
 
 /** event map item */
 type EventMapItem struct {
-	Topic      string `json:"topic"`
-	RetryCount int    `json:"retryCount"`
+	Topic      string `json:"topic" yaml:"topic"`
+	RetryCount int    `json:"retryCount" yaml:"retryCount"`
 }
 
 /** event mapping collection */
@@ -23,16 +23,35 @@ func readEventFile(mappingFile *string) []byte {
 	return data
 }
 
-func GetEventInfo(eventKey string, mappingFile *string) (*EventMapItem, error) {
-	data := readEventFile(mappingFile)
-	var items EventMappings
+type EventInfoProvider struct {
+	yaml       bool
+	eventItems EventMappings
+}
 
-	err := json.Unmarshal(data, &items)
-	if err != nil {
-		return nil, errors.New("unable to parse event mapping information")
+func NewEventProvider(mappingFile *string, yaml bool) *EventInfoProvider {
+	provider := &EventInfoProvider{
+		yaml: yaml,
 	}
+	var items EventMappings
+	data := readEventFile(mappingFile)
 
-	item, present := items[eventKey]
+	if provider.yaml {
+		err := json.Unmarshal(data, &items)
+		if err != nil {
+			panic("unable to parse yaml event mapping information")
+		}
+	} else {
+		err := json.Unmarshal(data, &items)
+		if err != nil {
+			panic("unable to parse json event mapping information")
+		}
+	}
+	provider.eventItems = items
+	return provider
+}
+
+func (provider *EventInfoProvider) GetEventInfo(eventKey string) (*EventMapItem, error) {
+	item, present := provider.eventItems[eventKey]
 
 	if !present {
 		return nil, errors.New("missing event information for provided topic")

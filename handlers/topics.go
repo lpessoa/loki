@@ -23,14 +23,14 @@ func writeError(w http.ResponseWriter, err error) {
 
 func TopicHandler(w http.ResponseWriter, r *http.Request) {
 	ctxProducer := r.Context().Value(middlewares.KafkaProducerInstance)
-	ctxMappingFile := r.Context().Value(middlewares.TopicMappingFile)
+	ctxMappingFile := r.Context().Value(middlewares.EventProvider)
 	producer := ctxProducer.(*kafka.Producer)
-	mappingFile := ctxMappingFile.(*string)
+	provider := ctxMappingFile.(*core.EventInfoProvider)
 
 	vars := mux.Vars(r)
 	topic := vars["topic"]
 
-	eventInfo, err := core.GetEventInfo(topic, mappingFile)
+	eventInfo, err := provider.GetEventInfo(topic)
 
 	if err != nil {
 		writeError(w, err)

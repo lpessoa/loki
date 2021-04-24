@@ -7,15 +7,16 @@ import (
 )
 
 var (
-	mappingFile string = "./eventMappingsFixture.json"
+	mappingFile  string             = "./eventMappingsFixture.json"
+	jsonProvider *EventInfoProvider = NewEventProvider(&mappingFile, false)
 )
 
 func TestGetEventInfo(t *testing.T) {
-	info, _ := GetEventInfo("test-1", &mappingFile)
+	info, _ := jsonProvider.GetEventInfo("test-1")
 	assert.Equal(t, info.Topic, "something")
 }
 
 func TestGetMissingEventInfo(t *testing.T) {
-	info, _ := GetEventInfo("missing-topic", &mappingFile)
+	info, _ := jsonProvider.GetEventInfo("missing-topic")
 	assert.Nil(t, info)
 }
