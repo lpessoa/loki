@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
 /** event map item */
 type EventMapItem struct {
 	Topic      string `json:"topic" yaml:"topic"`
-	RetryCount int    `json:"retryCount" yaml:"retryCount"`
+	RetryCount int    `json:"retryCount" yaml:"retries"`
 }
 
 /** event mapping collection */
@@ -28,15 +30,15 @@ type EventInfoProvider struct {
 	eventItems EventMappings
 }
 
-func NewEventProvider(mappingFile *string, yaml bool) *EventInfoProvider {
+func NewEventProvider(mappingFile *string, useYaml bool) *EventInfoProvider {
 	provider := &EventInfoProvider{
-		yaml: yaml,
+		yaml: useYaml,
 	}
 	var items EventMappings
 	data := readEventFile(mappingFile)
 
 	if provider.yaml {
-		err := json.Unmarshal(data, &items)
+		err := yaml.Unmarshal(data, &items)
 		if err != nil {
 			panic("unable to parse yaml event mapping information")
 		}
