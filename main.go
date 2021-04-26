@@ -15,8 +15,8 @@ import (
 )
 
 func main() {
-	mappingFile := flag.String("mappings", "./eventMappings.json", "Event mapping jsonfile")
-	yaml := flag.Bool("yml", false, "Mapping file is a YAML")
+	mappingFile := flag.String("mappings", "./eventMappings.json", "Event mappings file")
+	yaml := flag.Bool("yaml", false, "Mapping file is a YAML")
 	flag.Parse()
 
 	m := &middlewares.KafkaProducerMiddleware{}

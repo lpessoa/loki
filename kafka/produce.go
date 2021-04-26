@@ -81,7 +81,7 @@ func (producer *Producer) makePayload(schema *srclient.Schema, data *[]byte) ([]
 	return record, nil
 }
 
-func (producer *Producer) getHeaders(retryCount int) []kafka.Header {
+func (producer *Producer) getHeaders(eventItem *core.EventMapItem) []kafka.Header {
 	messageId := uuid.NewString()
 	return []kafka.Header{
 		{
@@ -90,7 +90,7 @@ func (producer *Producer) getHeaders(retryCount int) []kafka.Header {
 		},
 		{
 			Key:   "x-klzr-retry-count",
-			Value: []byte(fmt.Sprintf("%v", retryCount)),
+			Value: []byte(fmt.Sprintf("%v", eventItem.RetryCount)),
 		},
 	}
 }
@@ -107,7 +107,7 @@ func (producer *Producer) PublishMessageToTopic(eventItem *core.EventMapItem, pa
 	}
 
 	messageId := uuid.NewString()
-	headers := producer.getHeaders(eventItem.RetryCount)
+	headers := producer.getHeaders(eventItem)
 
 	err = producer.kProducer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &eventItem.Topic, Partition: kafka.PartitionAny},

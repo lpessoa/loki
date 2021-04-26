@@ -11,7 +11,7 @@ import (
 /** event map item */
 type EventMapItem struct {
 	Topic      string `json:"topic" yaml:"topic"`
-	RetryCount int    `json:"retryCount" yaml:"retryCount"`
+	RetryCount int    `json:"retryCount" yaml:"retries"`
 }
 
 /** event mapping collection */
