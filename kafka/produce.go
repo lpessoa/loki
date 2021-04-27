@@ -25,7 +25,7 @@ type Producer struct {
 }
 
 func NewProducer() IProducer {
-	schemaRegistryClient := srclient.CreateSchemaRegistryClient("http://schema-registry:8081")
+	schemaRegistryClient := srclient.CreateSchemaRegistryClient(core.GetEnv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081"))
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "bitnami-docker-kafka_kafka_1:9092"})
 
 	if err != nil {

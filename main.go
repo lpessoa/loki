@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,12 +20,19 @@ func main() {
 	yaml := flag.Bool("yaml", false, "Mapping file is a YAML")
 	flag.Parse()
 
+	var handlerWriter io.Writer = os.Stdout
+	logOutput := core.GetLogger()
+	if logOutput != nil {
+		handlerWriter = logOutput
+		defer logOutput.Close()
+	}
+
 	m := &middlewares.KafkaProducerMiddleware{}
 	m.Setup(mappingFile, *yaml)
 
 	r := mux.NewRouter()
 	r.Use(m.Middleware)
-	r.Handle("/events/{topic}", handlers.LoggingHandler(os.Stdout, http.HandlerFunc(lokiHandlers.TopicHandler)))
+	r.Handle("/events/{topic}", handlers.LoggingHandler(handlerWriter, http.HandlerFunc(lokiHandlers.TopicHandler)))
 
 	listenAddr := fmt.Sprintf(":%v", core.GetEnv("PORT", "8080"))
 	log.Fatal(http.ListenAndServe(listenAddr, r))
