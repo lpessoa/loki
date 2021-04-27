@@ -1,3 +1,5 @@
+github.com/bsphere/le_go v0.0.0-20200109081728-fc06dab2caa8 h1:fcONpniVVbh9+duVZYYbJuc+yGGdLRxTqpk7pTTz/qI=
+github.com/bsphere/le_go v0.0.0-20200109081728-fc06dab2caa8/go.mod h1:GrjfimWtH8h8EqJSfbO+sTQYV/fAjL/VN7dMeU8XP2Y=
 github.com/confluentinc/confluent-kafka-go v1.6.1 h1:YxM/UtMQ2vgJX2gIgeJFUD0ANQYTEvfo4Cs4qKUlmGE=
 github.com/confluentinc/confluent-kafka-go v1.6.1/go.mod h1:u2zNLny2xq+5rWeTQjFHbDzzNuba4P1vo31r9r4uAdg=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
